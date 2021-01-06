@@ -1,0 +1,196 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<div class="container blog bg-light p-5 mt-5 rounded">
+      <div class="row">
+        <div class="col-3 text-center">
+            <a class="mugshot-container mb-1" href="{% url 'profile' question.author.pk %}">
+              <div class="mugshot-img mb-2" style="background-image:url({{question.author.profile.image.url}})"></div>
+              <span>{{question.author.username}}</span>
+            </a>
+          <small class="text-muted">{{question.date_published|date:"d/m/Y h:i a"}}</small>
+        </div>
+        <div class="col-9 question-information pb-1">
+            <div class="question">
+                <div class="question-mark">
+                    <span>Q:</span>
+                </div>
+                <div class="question-content">
+                    <h3 class="mb-0">{{question.title}}</h3>
+                    
+                </div>
+            </div>
+            {% if request.user == question.author %}
+                <div class="pl-2">
+                    <a href="{% url 'question_delete' question.pk %}" class="btn btn-sm btn-danger"> Delete</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="question-detail-container">
+                <div class="answers-container">
+                <span id="answer-above"></span>
+                <p class="loading-comment animate text-center">loading advices...</p>
+                {% if request.user.is_authenticated %}
+                <form class="post-answer-form">
+                    <div class="form-group">
+                        <label for="answer" class="answer-heading">Post an advice</label>
+                        <textarea class="form-control advice-form mb-2" name="answer" id="answer" rows="5"></textarea>
+                        <button class="btn btn-primary" type="submit" id="post-comment">Submit</button>
+                    </div>
+                    <p class="text-danger font-weight-bold" id="form-error"></p>
+                </form>
+                {% else %}
+                    <p class="answer-heading"><a href="{% url 'login' %}">Login</a> to post an advice</p>
+                {% endif %} 
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+{% endblock content %}
+
+
+{% block js %}
+<script>
+    $(document).ready(function(){
+        //this function runs once and fetches the advices of this specific question.
+        function fetchAdvicesUpdateUI(){
+            //here we are passing the question id as a parameter for our api
+            fetch("/questions/api/{{question.id}}")
+            .then(res => res.json())
+            .then(data => {
+                    //we create an empty answers array
+                    let answers = []
+                    // now we loop over the data returned from the api
+                    for(var i = 0; i < data.length; i ++){
+                        // we are constructing the markup from the data returned from the
+                        // api, it is convenient to construct them in arrays like this.
+                        // It is very cumbersome to make it one large string that's why we are storing it in an array
+                        // it can easily be converted to a string using joing method
+                        var answer = [
+                            "<div class='answer'><div class='answer-by'>",
+                            "<a class='mugshot-container mb-1' href='",
+                            data[i].user_url,
+                            "'> <div class='mugshot-img-sm mb-2' style='background-image:url(",
+                            data[i].user_image,
+                            ")'></div><span>",
+                            data[i].username,
+                            "</span></a> <small class='text-muted'>",
+                            data[i].date_published,
+                            "</small></div><div class='answer-content'> <p>",
+                            data[i].content,
+                            "</p></div></div>" 
+                        ]
+                        //after creating the markup and converting it to string, we are pushing it to our main answers array
+                        answers.push(answer.join(""))
+                    }
+
+                    //Here we whether the api returned any answers or not and display appropriate message accordingly.
+                    if( answers.length < 1){
+                        answers = ['<p class="no-answer">No answers posted to this thread yet!</p>']
+                    } else{
+                        answers.unshift('<h3 class="answer-heading" id="answer-here">Answers:</h3>')
+                    }
+                    
+                    // here we simply loop over the advices array and push it to our html document.
+                    for(var i = 0; i < answers.length; i++){
+                        $("#answer-above").before(answers[i])
+                    }
+
+                    // we hide the loading advices message.
+                    $(".loading-comment").css("display", "none")
+                })
+        }
+        //Load the advices once on page load.
+        fetchAdvicesUpdateUI()
+
+        //whenever form is submitted, we run this function.
+        $(".post-answer-form").on("submit", function(e){
+            // it prevents default html action
+            e.preventDefault()
+            // we pass the answer box text to our post Answer function
+            postAdvice($('.advice-form').val())
+        })
+
+        function postAdvice(content){
+            // check if answerw was empty and return if true
+            if(content.length === 0){
+                $("#form-error").text("Can't be empty!")
+                $("#form-error").css("display", "block")
+                return;
+            }
+            $("#form-error").css("display", "none")
+            // hide button interaction
+            $("#post-comment").text("Wait...").attr('disabled', true);
+
+            //construct data to send to api
+            var mydata = {
+                    'content': content,
+                };
+            
+            // added the correct ids for question and user for the request
+            fetch('/questions/api/{{question.id}}/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // we get the csrf token and atttach it to our request
+                    'X-CSRFTOKEN': Cookies.get('csrftoken')
+                },
+                // data we want to send to api
+                body:JSON.stringify(mydata)
+            })
+            .then(res => res.json())
+            .then(data => {
+        
+                // Constructing markup in array from data recieved
+                var answer = [
+                "<div class='answer new-answer'><div class='answer-by'>",
+                            "<a class='mugshot-container mb-1' href='",
+                            data.user_url,
+                            "'> <div class='mugshot-img-sm mb-2' style='background-image:url(",
+                            data.user_image,
+                            ")'></div><span>",
+                            data.username,
+                            "</span></a> <small class='text-muted'>",
+                            data.date_published,
+                            "</small></div><div class='answer-content'> <p>",
+                            data.content,
+                            "</p></div></div>"
+                    ]
+        
+                    // converting markup array to text and posting in the dom html
+                    // check to see if answers exist before, if so then post before the latest answer 
+                    // if they don't exist then this will be posted before the identifier
+                    if($(".answer").length > 0){
+                        $("#answer-here").after(answer.join(''));
+                    } else{
+                        $("#answer-above").after('<h3 class="answer-heading" id="answer-here">Answers:</h3>')
+                        $("#answer-here").after(answer.join(''))
+                        $(".no-answer").css("display", "none")
+                    }
+                    // setting button clickable again and changing text back to Submit
+                    $("#post-comment").text("Submit").attr('disabled', false);
+                    //clear input field
+                    $('.advice-form').val("");
+                    //scroll to answer we just saved and the api returned
+                    $("html, body").animate({ scrollTop: $("#answer-here").offset().top }, 500);
+                    // unfocus the submit button
+                    $("#post-comment").blur();
+
+            })
+            .catch(err => console.log(err))
+
+           
+
+        }
+    })
+</script>
+
+{% endblock js %}

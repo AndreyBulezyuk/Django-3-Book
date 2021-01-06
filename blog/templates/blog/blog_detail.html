@@ -1,0 +1,26 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<div class="container blog bg-light p-5 mt-5 rounded ">
+    <div class="row">
+        <div class="col-3 text-center">
+          <a class="mugshot-container mb-1" href="{% url 'profile' blog.author.pk %}">
+            <div class="mugshot-img mb-2" style="background-image:url({{blog.author.profile.image.url}})"></div>
+            <span>{{blog.author.username}}</span>
+        </a>
+          <small class="text-muted">{{blog.date_published|date:"d/m/Y h:i a"}}</small>
+        </div>
+        <div class="col-9 question-information pb-1">
+          <h1 class="blog-card-title mb-3 font-weight-bold">{{blog.title}}</h1>
+          {% if request.user == blog.author %}
+            <a href="{% url 'blog_update' blog.pk %}" class="btn btn-sm btn-primary"> Update</a>
+            <a href="{% url 'blog_delete' blog.pk %}" class="btn btn-sm btn-danger"> Delete</a>
+          {% endif %}
+        </div>
+    </div>
+    <div class="row">
+      <div class="col-12 mt-5">
+        <p class="line-height text-justify"> {{blog.content}}</p>
+      </div>
+    </div>
+</div>
+{% endblock content %}

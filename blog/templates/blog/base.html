@@ -1,0 +1,83 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
+    <title>My Finance Blog</title>
+  </head>
+  <body class="bg-light">
+    <header>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+          <div class="container">
+              <a class="navbar-brand mb-0 h1" href="{% url 'blog_list' %}">My Financial Blog</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav">
+            <li class="nav-item ml-2">
+              <a href="{% url 'question_create' %}" class="nav-link btn btn-light text-dark">Ask Question</a>
+          </li>
+            <li class="nav-item ml-2">
+              <a href="{% url 'blog_create' %}" class="nav-link btn btn-dark">Write a Blog</a>
+            </li>
+          </ul>
+
+          <ul class="navbar-nav ml-auto">
+              {% if request.user.is_authenticated %}
+              
+              <li class="nav-item">
+                  <a href="{% url 'profile' request.user.pk %}" class="nav-link">Profile</a>
+              </li>
+              <li class="nav-item">
+                  <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+              </li>
+              {% else %}
+              <li class="nav-item">
+                  <a href="{% url 'login' %}" class="nav-link">Login</a>
+              </li>
+              <li class="nav-item">
+                  <a href="{% url 'register' %}" class="nav-link">Register</a>
+              </li>
+              {% endif %}
+              <li class="nav-item">
+                <a href="{% url 'question_list' %}" class="nav-link">Browse Questions</a>
+            </li>
+          </ul>
+          </div>
+          </div>
+        </nav>
+  </header>
+
+
+{% block content %}
+
+{% endblock content %}
+
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show custom-alert" role="alert">
+      <strong>{{ message }}</strong>
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+
+    {% block js %}
+    {% endblock js %}
+
+  </body>
+</html>
